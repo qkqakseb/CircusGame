@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MeterMove : MonoBehaviour
+public class BackgroundLoop : MonoBehaviour
 {
-
+    public float BackgroundSpeed = default;
 
     // Start is called before the first frame update
     void Start()

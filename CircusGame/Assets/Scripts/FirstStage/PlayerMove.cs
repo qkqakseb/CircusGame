@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerMove : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class PlayerMove : MonoBehaviour
     #region Player's component
     private Rigidbody2D playerRigid = default;
     private Animator playerAni = default;
+ 
     #endregion
 
     // Start is called before the first frame update
@@ -22,6 +24,7 @@ public class PlayerMove : MonoBehaviour
     {
         playerRigid = gameObject.GetComponentMust<Rigidbody2D>();
         playerAni = gameObject.GetComponentMust<Animator>();
+        
     }
 
     // Update is called once per frame
@@ -38,8 +41,11 @@ public class PlayerMove : MonoBehaviour
             // 점프키 누르는 순간 움직임을 완전히 멈춤
             playerRigid.velocity = Vector2.zero;
 
+
             // 리지드바디에 위쪽으로 힘 주기
             playerRigid.AddForce(new Vector2(0, jumpForce));
+
+
             
         }  // if : 플레이어가 점프 할 때
 
