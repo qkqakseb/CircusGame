@@ -10,8 +10,9 @@ public class PlayerMove : MonoBehaviour
     public float jumpForce = default; // 점프 힘
 
     private int jumpCount = default; // 누적 점프 횟수
-    private bool isGround = false; // 불고리에 닿았는지
+    private bool isGround = false; // 땅에 닿았는지
     private bool isDead = false;     // 사망 상태
+    private float backgrMove = default;
 
     #region Player's component
     private Rigidbody2D playerRigid = default;
@@ -39,15 +40,36 @@ public class PlayerMove : MonoBehaviour
             jumpCount++;
 
             // 점프키 누르는 순간 움직임을 완전히 멈춤
-            playerRigid.velocity = Vector2.zero;
+            //playerRigid.velocity = Vector2.zero;
 
 
             // 리지드바디에 위쪽으로 힘 주기
             playerRigid.AddForce(new Vector2(0, jumpForce));
-
-
-            
         }  // if : 플레이어가 점프 할 때
+
+        // 왼쪽 방향키를 누르는 순간 움직인다.
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            playerRigid.velocity = new Vector2( -1 * 5f,  0f);
+        }
+        else if(Input.GetKeyUp(KeyCode.LeftArrow))     // 이코드 문제 수정해야된다!!!!!!
+        {
+            // 왼쪽 방향키를 때는 순간 완전히 멈춘다.(슬라이드로 가는 거 막을려고 쓴다.)
+            playerRigid.velocity = Vector2.zero;
+            //playerRigid.velocity = new Vector2(0, playerRigid.velocity.y);
+        }
+
+        // 오른쪽 방향키를 누르는 순간 움직인다.
+        if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            playerRigid.velocity = new Vector2(1 * 5f, 0f);
+        }
+        else if (Input.GetKeyUp(KeyCode.RightArrow))
+        {
+            // 오른쪽 방향키를 때는 순간 완전히 멈춘다.
+            playerRigid.velocity = Vector2.zero;
+
+        }
 
     }
 
