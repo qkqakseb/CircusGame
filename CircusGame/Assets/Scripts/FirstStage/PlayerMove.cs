@@ -1,18 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PlayerMove : MonoBehaviour
 {
-    private const float PLAYER_STEP_ON_Y_ANGLE_MIN = 0.7f;  //!< 45도 각도
-
+    private float playSpeed = 10f; // 플레이어 스피드
     public float jumpForce = default; // 점프 힘
 
     private int jumpCount = default; // 누적 점프 횟수
-    private bool isGround = false; // 땅에 닿았는지
-    private bool isDead = false;     // 사망 상태
-    private float backgrMove = default;
+    private bool isGround = false; // 땅에 닿았는지 확인
+    public bool isDie = false;
+    private bool isGoalCk = false;
+    
 
     #region Player's component
     private Rigidbody2D playerRigid = default;
@@ -23,81 +24,124 @@ public class PlayerMove : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        playerRigid = gameObject.GetComponentMust<Rigidbody2D>();
-        playerAni = gameObject.GetComponentMust<Animator>();
+        // 리지드바디 선언
+        playerRigid = gameObject.GetComponent<Rigidbody2D>(); 
+        //// 애니메이션 선언
+        //playerAni = gameObject.GetComponent<Animator>();
+        // 자식에 있는 애니메이션을 가지고 왔다.
+        playerAni = transform.GetChild(1).GetComponent<Animator>();
         
     }
 
     // Update is called once per frame
     void Update()
     {
-        // 사망 시 처리를 더 이상 진행하지 않고 종료
-        if (isDead == true) { return;}
-
-        // 스페이스를 눌렀으며 && 최대 점프 횟수(2)에 도달하지 않았다면
-        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < 1)
+        // isGoalCk와 isDie 이 false 면 move,jump 가 움직이지 않게 하기
+        if (!isGoalCk && !isDie)
         {
-            jumpCount++;
-
-            // 점프키 누르는 순간 움직임을 완전히 멈춤
-            //playerRigid.velocity = Vector2.zero;
-
-
-            // 리지드바디에 위쪽으로 힘 주기
-            playerRigid.AddForce(new Vector2(0, jumpForce));
-        }  // if : 플레이어가 점프 할 때
-
-        // 왼쪽 방향키를 누르는 순간 움직인다.
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            playerRigid.velocity = new Vector2( -1 * 5f,  0f);
+            Move();
+            Jump();
         }
-        else if(Input.GetKeyUp(KeyCode.LeftArrow))     // 이코드 문제 수정해야된다!!!!!!
+        //Debug.Log($"movecheck : {isGoalCk}  , {isDie}");
+      
+
+    }
+
+    // Move 좌, 우 이동하기
+    private void Move()
+    {
+        // <- 방향키를 누를때  왼쪽으로이동
+        if (Input.GetKey(KeyCode.LeftArrow))
         {
-            // 왼쪽 방향키를 때는 순간 완전히 멈춘다.(슬라이드로 가는 거 막을려고 쓴다.)
+            //playerRigid.AddForce(new Vector2(-playSpeed, 0f), ForceMode2D.Impulse);
+            playerRigid.velocity = new Vector2(-1 * playSpeed, 0f);
+        }
+        // <- 방향키를 땠을때 이동 하지 않게 하기
+        else if (Input.GetKeyUp(KeyCode.LeftArrow))
+        {
             playerRigid.velocity = Vector2.zero;
-            //playerRigid.velocity = new Vector2(0, playerRigid.velocity.y);
         }
 
-        // 오른쪽 방향키를 누르는 순간 움직인다.
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        // -> 방향키를 누를 때 오른쪽으로 이동
+        if (Input.GetKey(KeyCode.RightArrow))
         {
-            playerRigid.velocity = new Vector2(1 * 5f, 0f);
+            //playerRigid.AddForce(new Vector2(playSpeed, 0f), ForceMode2D.Impulse);
+            playerRigid.velocity = new Vector2(1 * playSpeed, 0f);
         }
+        // -> 방향키를 떘을때 이동 하지 않게 하기
         else if (Input.GetKeyUp(KeyCode.RightArrow))
         {
-            // 오른쪽 방향키를 때는 순간 완전히 멈춘다.
             playerRigid.velocity = Vector2.zero;
+        }
+    }
 
+    // jump 하기
+    public void Jump()
+    {
+        // 스페이스바를 눌렀을 때 점프 && jump 1번만 하기
+        if (Input.GetKeyDown(KeyCode.Space) && jumpCount < 1)
+        {
+            // 점프를 하지 않게 만든다(1번만 점프)
+            jumpCount++;
+
+            playerRigid.AddForce(new Vector2(0, jumpForce));
+        }
+        
+    }
+
+    // 충돌하는지 확인하기
+    public void OnCollisionEnter2D(Collision2D collision)
+    {
+        // Ground라는 이름의 tag와 충돌하면
+        if (collision.gameObject.tag == "Ground")
+        {
+            // 초기화 (다시 점프하게 만든다)
+            jumpCount = 0;
         }
 
+        // Gogal 위에 닿으면 SecondScene 이름의 씬으로 넘어간다.
+        if (collision.gameObject.tag == "GoalBoxCollider")
+        {
+            // 가속도 초기화
+            isGoalCk = true;
+            playerRigid.velocity = Vector2.zero;
+
+            // 플레이어 좌표를 Goal 좌표로 고정한다.
+            transform.localPosition = new Vector2(12040f, -90f);
+            // 딜레이 함수 불러오기
+            StartCoroutine(Goal());
+        }
+
+        if (collision.gameObject.tag == "Obstacle")
+        {
+            Die();
+        }
     }
 
-    private void Die()
+    // 딜레이를 주기 위해 만든 함수
+    IEnumerator Goal()
     {
-        // 애니메이터의 Die 트리거 파라미터를 셋
+        yield return new WaitForSeconds(0.5f);
+        GameManager.Instance.CurrentStage++;
+        GameManager.Instance.tmpTextChange();
+        SceneManager.LoadScene("SecondStage");
+    }
+
+
+
+    public void Die()
+    {
+
         playerAni.SetTrigger("Die");
 
-        // 속도를 제로로 변경
+        // 플레이어가 못 움직이게 한다.
+        // 가속도 초기화
+        isDie = true;
         playerRigid.velocity = Vector2.zero;
-        // 사망 상태를 true로 변경
-        isDead = true;
-        GFunc.Log(isDead);
+
+
+
     }
 
-    //! 바닥에 닿았는지 체크하는 함수
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (PLAYER_STEP_ON_Y_ANGLE_MIN < collision.contacts[0].normal.y)
-        {
-            isGround = true;
-            jumpCount = 0;
-        }       // if: 45도 보다 완만한 땅을 밟은 경우
-    }       // OnCollisionEnter2D()
-
-    //! 바닥에서 벗어났는지 체크하는 함수
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        isGround = false;
-    }       // OnCollisionExit2D()
+   
 }
