@@ -17,7 +17,8 @@ public class PlayerMove : MonoBehaviour
 
     #region Player's component
     private Rigidbody2D playerRigid = default;
-    private Animator playerAni = default;
+    private Animator PlayerAni = default;
+    private Animator LionAni = default;
  
     #endregion
 
@@ -25,11 +26,12 @@ public class PlayerMove : MonoBehaviour
     void Start()
     {
         // 리지드바디 선언
-        playerRigid = gameObject.GetComponent<Rigidbody2D>(); 
+        playerRigid = gameObject.GetComponent<Rigidbody2D>();
         //// 애니메이션 선언
-        //playerAni = gameObject.GetComponent<Animator>();
+        //LionAni = gameObject.GetComponent<Animator>();
         // 자식에 있는 애니메이션을 가지고 왔다.
-        playerAni = transform.GetChild(1).GetComponent<Animator>();
+        PlayerAni = transform.GetChild(0).GetComponent<Animator>();
+        LionAni = transform.GetChild(1).GetComponent<Animator>();
         
     }
 
@@ -43,8 +45,10 @@ public class PlayerMove : MonoBehaviour
             Jump();
         }
         //Debug.Log($"movecheck : {isGoalCk}  , {isDie}");
-      
 
+
+      
+          
     }
 
     // Move 좌, 우 이동하기
@@ -75,6 +79,54 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
+    // 버튼 입력(모바일)
+    // 왼쪽 버튼 
+    public void OnLeftButtonClick()
+    {
+        if (!isGoalCk && !isDie)
+        {
+            playerRigid.velocity = new Vector2(-1 * playSpeed, 0f);
+        }
+    }
+    public void OnLeftButtonUp()
+    {
+        playerRigid.velocity = Vector2.zero;
+    }
+
+
+    // 오른쪽 버튼
+    public void OnRightButtonClick()
+    {
+        
+        if (!isGoalCk && !isDie)
+        {
+            playerRigid.velocity = new Vector2(1 * playSpeed, 0f);
+        }
+    }
+    public void OnRightButtonUp()
+    {
+        if (!isGoalCk && !isDie)
+        {
+            playerRigid.velocity = Vector2.zero;
+        }
+    }
+
+    // 점프 버튼
+    public void OnJumpButtonClick()
+    {
+        if (!isGoalCk && !isDie)
+        {
+            if (Input.GetMouseButtonDown(0) && jumpCount < 1)
+            {
+                // 점프를 하지 않게 만든다(1번만 점프)
+                jumpCount++;
+
+                playerRigid.AddForce(new Vector2(0, jumpForce));
+            }
+        }
+
+    }
+
     // jump 하기
     public void Jump()
     {
@@ -95,6 +147,7 @@ public class PlayerMove : MonoBehaviour
         // Ground라는 이름의 tag와 충돌하면
         if (collision.gameObject.tag == "Ground")
         {
+            LionAni.SetBool("Grounded", true);
             // 초기화 (다시 점프하게 만든다)
             jumpCount = 0;
         }
@@ -131,15 +184,15 @@ public class PlayerMove : MonoBehaviour
 
     public void Die()
     {
-
-        playerAni.SetTrigger("Die");
+        PlayerAni.SetTrigger("Die");
+        LionAni.SetTrigger("Die");
 
         // 플레이어가 못 움직이게 한다.
         // 가속도 초기화
         isDie = true;
         playerRigid.velocity = Vector2.zero;
 
-
+        SceneManager.LoadScene("GameOver");
 
     }
 

@@ -8,6 +8,7 @@ TagManager:
   - GoalBoxCollider
   - Brazier
   - Obstacle
+  - randomRing
   layers:
   - Default
   - TransparentFX
@@ -16,8 +17,8 @@ TagManager:
   - Water
   - UI
   - Back
+  - Middle
   - Front
-  - 
   - 
   - 
   - 
